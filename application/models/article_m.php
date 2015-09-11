@@ -9,7 +9,7 @@ class Article_m extends MY_Model
 		'pubdate' => array(
 			'field' => 'pubdate', 
 			'label' => 'Publication date', 
-			'rules' => 'trim|required|exact_length[10]|xss_clean'
+			'rules' => 'trim|required|exact_length[10]|xss_clean|valid_date[DD/MM/YYYY,/]'
 		), 
 		'title' => array(
 			'field' => 'title', 

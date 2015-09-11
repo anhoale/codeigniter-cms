@@ -1,18 +1,58 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
-//http://www.php-dev-zone.com/2013/06/date-validation-in-php.html
-//to do need to update the valida_date to validate d/m/Y or m/d/Y
-class MY_Form_validation extends CI_Form_validation {
 
-   function __construct(){
+
+class MY_Form_validation extends CI_Form_validation {
+  private $_custom_field_errors = array();
+
+  function __construct(){
     parent::__construct();
-   }
+  }
+  /**
+  *Custom Form Validation Error Messages
+  *http://ajmm.org/2011/07/custom-form-validation-error-messages-in-codeigniter-2/
+  */
+  public function _execute($row, $rules, $postdata = NULL, $cycles = 0)
+    {
+        // Execute the parent method from CI_Form_validation.
+        parent::_execute($row, $rules, $postdata, $cycles);
+
+        // Override any error messages for the current field.
+        if (isset($this->_error_array[$row['field']])
+            && isset($this->_custom_field_errors[$row['field']]))
+        {
+            $message = str_replace(
+                '%s',
+                !empty($row['label']) ? $row['label'] : $row['field'],
+                $this->_custom_field_errors[$row['field']]);
+
+            $this->_error_array[$row['field']] = $message;
+            $this->_field_data[$row['field']]['error'] = $message;
+        }
+    }
+  /**
+  *@desc Allow set a custom validation error message
+  *
+  */
+  public function set_rules($field, $label = '', $rules = '', $message = '')
+    {
+        $rules = parent::set_rules($field, $label, $rules);
+
+        if (!empty($message))
+        {
+            $this->_custom_field_errors[$field] = $message;
+        }
+
+        return $rules;
+    }
+
+
 
    /**
    * @desc Validates a date format
    * @params format,delimiter
-   * e.g. d/m/y,/ or y-m-d,-
+   * e.g. DD/MM/YYYY OR MM/DD/YYYY
    */
-   function valid_date($str, $params)
+   function valid_date($params)
    {
     // setup
     $CI =&get_instance();
@@ -21,24 +61,27 @@ class MY_Form_validation extends CI_Form_validation {
     $date_parts = explode($delimiter, $params[0]);
 
     // get the index (0, 1 or 2) for each part
-    $di = $this->valid_date_part_index($date_parts, 'd');
-    $mi = $this->valid_date_part_index($date_parts, 'm');
-    $yi = $this->valid_date_part_index($date_parts, 'y');
+    $di = $this->valid_date_part_index($date_parts, 'DD');
+    $mi = $this->valid_date_part_index($date_parts, 'MM');
+    $yi = $this->valid_date_part_index($date_parts, 'YYYY');
 
     // regex setup
-    $dre =   "(0?1|0?2|0?3|0?4|0?5|0?6|0?7|0?8|0?9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31)";
-    $mre = "(0?1|0?2|0?3|0?4|0?5|0?6|0?7|0?8|0?9|10|11|12)";
-    $yre = "([0-9]{4})";
-    $red = ''.$delimiter; // escape delimiter for regex
+    $dre =   "(\d{2})";
+    $mre = "(\d{2})";
+    $yre = "(\d{4})";
+    $red = '\\'.$delimiter; // escape delimiter for regex
     $rex = "/^[0]{$red}[1]{$red}[2]/";
 
     // do replacements at correct positions
     $rex = str_replace("[{$di}]", $dre, $rex);
     $rex = str_replace("[{$mi}]", $mre, $rex);
     $rex = str_replace("[{$yi}]", $yre, $rex);
-
+    
+    echo $di.', '.$mi.','.$yi;
+    echo '<br/>'.$rex;
     if (preg_match($rex, $str, $matches))
     {
+      print_r($matches);
      // skip 0 as it contains full match, check the date is logically valid
      if (checkdate($matches[$mi + 1], $matches[$di + 1], $matches[$yi + 1]))
      {
@@ -47,7 +90,7 @@ class MY_Form_validation extends CI_Form_validation {
      else
      {
       // match but logically invalid
-      $CI->form_validation->set_message('valid_date', "The date is invalid.");
+      $CI->form_validation->set_message('valid_date', "The date is invalid. Valid formaty is {$params[0]}");
       return false;
      }
     }

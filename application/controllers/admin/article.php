@@ -29,6 +29,8 @@ class Article extends Admin_Controller {
 		$rules = $this->article_m->rules;
 		$this->form_validation->set_rules($rules);
 
+		$this->form_validation->set_rules('pubdate','Publication Date', 'required',' Publication Date is required. Please pick a date from the Date Picker.');
+
 		//process the form
 		if ($this->form_validation->run() == TRUE) {
 			
