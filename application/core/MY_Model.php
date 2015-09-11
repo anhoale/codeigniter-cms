@@ -19,7 +19,8 @@ class MY_Model extends CI_Model {
 				$data[$field] =  DateTime::createFromFormat('d/m/Y', $this->input->post($field))->format('Y-m-d');
 			}
 			else {
-			$data[$field] = htmlentities($this->input->post($field),ENT_QUOTES, 'UTF-8');
+			//$data[$field] = htmlentities($this->input->post($field),ENT_QUOTES, 'UTF-8');
+			$data[$field] = $this->input->post($field);
 			}
 		}
 		return $data;
